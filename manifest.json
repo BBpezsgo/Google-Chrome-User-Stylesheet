@@ -1,0 +1,31 @@
+{
+    "name": "User Stylesheet",
+    "version": "1.0",
+    "manifest_version": 3,
+    "permissions": [
+        "scripting",
+        "activeTab",
+        "tabs"
+    ],
+    "host_permissions": [
+      "http://*/*",
+      "https://*/*"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_title": "User Stylesheet",
+        "default_icon": {
+          "16": "/images/iconInactive16.png",
+          "32": "/images/iconInactive32.png"
+        }
+    },
+    "icons": {
+        "16": "/images/icon16.png",
+        "32": "/images/icon32.png",
+        "48": "/images/icon48.png",
+        "128": "/images/icon128.png",
+        "512": "/images/icon512.png"
+    }
+}
