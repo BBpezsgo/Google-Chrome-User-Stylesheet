@@ -64,14 +64,120 @@ function SetIcon(state, tabID) {
     }
 }
 
+function SetPageColorOverrides(name, tabID) {
+    console.log('SetPageColorOverrides()')
+    try {
+        const url = chrome.runtime.getURL('styles/' + name + '.ov');
+        console.log('Fetching: ' + url)
+        fetch(url)
+            .then((response) => response.text()
+            .then((value) => {
+                /** @type {{key: string;value: string;}[]} */
+                var overrides = []
+
+                console.log('Process overrides...')
+
+                value.split('\n').forEach(line => {
+                    if (line.includes('>')) {
+                        var left = line.split('>')[0].trim()
+                        var right = line.split('>')[1].trim()
+                        overrides.push({key: left, value: right})
+                    }
+                });
+
+                console.log('Apply overrides... (1)')
+                chrome.scripting.executeScript({
+                    target: { tabId: tabID },
+                    /** @param {{key: string;value: string;}[]} overrides */
+                    function: (overrides) => {
+                        console.log('Apply overrides... (2)')
+                        const allInBody = document.querySelectorAll('body *');
+                        for (const element of allInBody) {
+                            if (element == undefined || element == null) { continue }
+                            if (element.hasAttribute('style') == true) {
+                                /** @type {string} */
+                                var style = element.getAttribute('style')
+                                var ovVal = null
+                                for (let i = 0; i < overrides.length; i++) {
+                                    const overrideItem = overrides[i];
+                                    if (style.includes(overrideItem.key)) {
+                                        ovVal = overrideItem
+                                        break
+                                    }
+                                }
+                                if (ovVal != null && ovVal != undefined) {
+                                    element.setAttribute('style', style.replace(ovVal.key, ovVal.value))
+                                }
+                            }
+                        }
+                    },
+                    args: [overrides]
+                })
+                .catch((error) => {
+                    console.error(error)
+                })
+            }))
+            .catch((error) => {
+                console.error(error)
+            })
+        .catch((error) => {
+            console.error(error)
+        })
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+function SetPageGlobalStyle(tabID) {
+    try {
+        const urlGlobal = chrome.runtime.getURL('styles/global.css');
+        console.log('Fetching: ' + urlGlobal)
+        fetch(urlGlobal)
+            .then((response) => response.text()
+            .then((value) => {
+                chrome.scripting.executeScript({
+                    target: { tabId: tabID },
+                    function: (styleContent) => {
+                        var domStyle = document.getElementById('user-global-stylesheet');
+                        if (domStyle == null) {
+                            domStyle = document.createElement('style')
+                            domStyle.id = "user-global-stylesheet";
+                        }
+                        domStyle.innerHTML = styleContent;
+                        document.head.appendChild(domStyle);
+                    },
+                    args: [value]
+                })
+                .catch((error) => {
+                    console.error(error)
+                })
+            }))
+            .catch((error) => {
+                console.error(error)
+            })
+        .catch((error) => {
+            console.error(error)
+        })
+    } catch (error) {
+        console.error(error)
+    }
+}
+
 function SetPageStyle(uri, tabID) {
-    SetBadge('LOADING', tabID)
+    try {
+        SetBadge('LOADING', tabID)
+    } catch (error) {
+        console.error(error)
+    }
 
     try {
         var domain = new URL(uri).hostname
         const url = chrome.runtime.getURL('styles/' + domain + '.css');
+        console.log('Fetching: ' + url)
         fetch(url)
-            .then((response) => console.log(response.text().then((value) => {
+            .then((response) => response.text().then((value) => {
+                SetPageGlobalStyle(tabID)
+                SetPageColorOverrides(domain, tabID)
                 chrome.scripting.executeScript({
                     target: { tabId: tabID },
                     function: (styleContent) => {
@@ -94,7 +200,7 @@ function SetPageStyle(uri, tabID) {
                     SetBadge('ERROR', tabID)
                     SetIcon('INACTIVE', tabID)
                 })
-            })))
+            }))
             .catch((error) => {
                 console.error(error)
                 SetBadge('NONE', tabID)
