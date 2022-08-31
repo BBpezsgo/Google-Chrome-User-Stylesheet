@@ -1,5 +1,7 @@
 'use strict'
 
+const enableLogs = false
+
 chrome.action.onClicked.addListener(async (tab) => {
     if (!tab.url.startsWith("chrome")) {
         SetPageStyle(tab.url, tab.id)
@@ -65,17 +67,17 @@ function SetIcon(state, tabID) {
 }
 
 function SetPageColorOverrides(name, tabID) {
-    console.log('SetPageColorOverrides()')
+    if (enableLogs) { console.log('SetPageColorOverrides()') }
     try {
         const url = chrome.runtime.getURL('styles/' + name + '.ov');
-        console.log('Fetching: ' + url)
+        if (enableLogs) { console.log('Fetching: ' + url) }
         fetch(url)
             .then((response) => response.text()
             .then((value) => {
                 /** @type {{key: string;value: string;}[]} */
                 var overrides = []
 
-                console.log('Process overrides...')
+                if (enableLogs) { console.log('Process overrides...') }
 
                 value.split('\n').forEach(line => {
                     if (line.includes('>')) {
@@ -85,12 +87,12 @@ function SetPageColorOverrides(name, tabID) {
                     }
                 });
 
-                console.log('Apply overrides... (1)')
+                if (enableLogs) { console.log('Apply overrides... (1)') }
                 chrome.scripting.executeScript({
                     target: { tabId: tabID },
                     /** @param {{key: string;value: string;}[]} overrides */
                     function: (overrides) => {
-                        console.log('Apply overrides... (2)')
+                        if (enableLogs) { console.log('Apply overrides... (2)') }
                         const allInBody = document.querySelectorAll('body *');
                         for (const element of allInBody) {
                             if (element == undefined || element == null) { continue }
@@ -114,24 +116,24 @@ function SetPageColorOverrides(name, tabID) {
                     args: [overrides]
                 })
                 .catch((error) => {
-                    console.error(error)
+                    if (enableLogs) { console.error(error) }
                 })
             }))
             .catch((error) => {
-                console.error(error)
+                if (enableLogs) { console.error(error) }
             })
         .catch((error) => {
-            console.error(error)
+            if (enableLogs) { console.error(error) }
         })
     } catch (error) {
-        console.error(error)
+        if (enableLogs) { console.error(error) }
     }
 }
 
 function SetPageGlobalStyle(tabID) {
     try {
         const urlGlobal = chrome.runtime.getURL('styles/global.css');
-        console.log('Fetching: ' + urlGlobal)
+        if (enableLogs) { console.log('Fetching: ' + urlGlobal) }
         fetch(urlGlobal)
             .then((response) => response.text()
             .then((value) => {
@@ -149,17 +151,17 @@ function SetPageGlobalStyle(tabID) {
                     args: [value]
                 })
                 .catch((error) => {
-                    console.error(error)
+                    if (enableLogs) { console.error(error) }
                 })
             }))
             .catch((error) => {
-                console.error(error)
+                if (enableLogs) { console.error(error) }
             })
         .catch((error) => {
-            console.error(error)
+            if (enableLogs) { console.error(error) }
         })
     } catch (error) {
-        console.error(error)
+        if (enableLogs) { console.error(error) }
     }
 }
 
@@ -167,13 +169,13 @@ function SetPageStyle(uri, tabID) {
     try {
         SetBadge('LOADING', tabID)
     } catch (error) {
-        console.error(error)
+        if (enableLogs) { console.error(error) }
     }
 
     try {
         var domain = new URL(uri).hostname
         const url = chrome.runtime.getURL('styles/' + domain + '.css');
-        console.log('Fetching: ' + url)
+        if (enableLogs) { console.log('Fetching: ' + url) }
         fetch(url)
             .then((response) => response.text().then((value) => {
                 SetPageGlobalStyle(tabID)
@@ -196,18 +198,18 @@ function SetPageStyle(uri, tabID) {
                     SetIcon('ACTIVE', tabID)
                 })
                 .catch((error) => {
-                    console.error(error)
+                    if (enableLogs) { console.error(error) }
                     SetBadge('ERROR', tabID)
                     SetIcon('INACTIVE', tabID)
                 })
             }))
             .catch((error) => {
-                console.error(error)
+                if (enableLogs) { console.error(error) }
                 SetBadge('NONE', tabID)
                 SetIcon('INACTIVE', tabID)
             })
     } catch (error) {
-        console.error(error)
+        if (enableLogs) { console.error(error) }
         SetBadge('ERROR', tabID)
         SetIcon('INACTIVE', tabID)
     }
