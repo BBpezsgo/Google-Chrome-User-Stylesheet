@@ -2,7 +2,7 @@
 > I used some code from [Eltee-Taiwo](https://github.com/Eltee-Taiwo)'s [reposity](https://github.com/Eltee-Taiwo/ChromePageStyler)
 
 ## How to install
-  1. Clone the reposity
+  1. [Clone the reposity](https://github.com/BBpezsgo/Google-Chrome-User-Stylesheet/archive/refs/heads/main.zip)
   2. Unzip the `.zip` file
   3. In **Chrome settings**, go to the **Extensions** tab
   4. Enable **Developer mode**
