@@ -4,22 +4,22 @@ const enableLogs = false
 
 chrome.action.onClicked.addListener(async (tab) => {
     if (!tab.url.startsWith("chrome")) {
-        SetPageStyle(tab.url, tab.id)
+        SetPageStyle(tab.url, tab.id, enableLogs)
         chrome.scripting.executeScript({
             target: { tabId: tab.id },
             function: SetPageStyle,
-            args: [tab.url, tab.id]
+            args: [tab.url, tab.id, enableLogs]
         })
     }
 })
 
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
     if (!tab.url.startsWith("chrome")) {
-        SetPageStyle(tab.url, tab.id)
+        SetPageStyle(tab.url, tab.id, enableLogs)
         chrome.scripting.executeScript({
             target: { tabId: tabId },
             function: SetPageStyle,
-            args: [tab.url, tab.id]
+            args: [tab.url, tab.id, enableLogs]
         })
     }
 })
@@ -90,8 +90,8 @@ function SetPageColorOverrides(name, tabID) {
                 if (enableLogs) { console.log('Apply overrides... (1)') }
                 chrome.scripting.executeScript({
                     target: { tabId: tabID },
-                    /** @param {{key: string;value: string;}[]} overrides */
-                    function: (overrides) => {
+                    /** @param {{ key: string; value: string; }[]} overrides @param {boolean} enableLogs */
+                    function: (overrides, enableLogs) => {
                         if (enableLogs) { console.log('Apply overrides... (2)') }
                         const allInBody = document.querySelectorAll('body *');
                         for (const element of allInBody) {
@@ -113,7 +113,7 @@ function SetPageColorOverrides(name, tabID) {
                             }
                         }
                     },
-                    args: [overrides]
+                    args: [overrides, enableLogs]
                 })
                 .catch((error) => {
                     if (enableLogs) { console.error(error) }
@@ -165,7 +165,7 @@ function SetPageGlobalStyle(tabID) {
     }
 }
 
-function SetPageStyle(uri, tabID) {
+function SetPageStyle(uri, tabID, enableLogs) {
     try {
         SetBadge('LOADING', tabID)
     } catch (error) {
