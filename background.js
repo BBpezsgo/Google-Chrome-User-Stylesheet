@@ -166,10 +166,8 @@ function SetPageGlobalStyle(tabID) {
 }
 
 function SetPageStyle(uri, tabID, enableLogs) {
-    try {
+    if (typeof SetBadge !== 'undefined') {
         SetBadge('LOADING', tabID)
-    } catch (error) {
-        if (enableLogs) { console.error(error) }
     }
 
     try {
@@ -205,8 +203,12 @@ function SetPageStyle(uri, tabID, enableLogs) {
             }))
             .catch((error) => {
                 if (enableLogs) { console.error(error) }
-                // SetBadge('NONE', tabID)
-                // SetIcon('INACTIVE', tabID)
+                if (typeof SetBadge !== 'undefined') {
+                    SetBadge('NONE', tabID)
+                }
+                if (typeof SetIcon !== 'undefined') {
+                    SetIcon('INACTIVE', tabID)
+                }
             })
     } catch (error) {
         if (enableLogs) { console.error(error) }
