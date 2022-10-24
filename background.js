@@ -4,22 +4,32 @@ const enableLogs = false
 
 chrome.action.onClicked.addListener(async (tab) => {
     if (!tab.url.startsWith("chrome")) {
-        SetPageStyle(tab.url, tab.id, enableLogs)
-        chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            function: SetPageStyle,
-            args: [tab.url, tab.id, enableLogs]
+        const url = chrome.runtime.getURL('styles/' + new URL(tab.url).hostname + '.css');
+        if (enableLogs) { console.log('Fetching: ' + url) }
+        fetch(url)
+        .then(() => {
+            SetPageStyle(tab.url, tab.id, enableLogs)
+            chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                function: SetPageStyle,
+                args: [tab.url, tab.id, enableLogs]
+            })
         })
     }
 })
 
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
     if (!tab.url.startsWith("chrome")) {
-        SetPageStyle(tab.url, tab.id, enableLogs)
-        chrome.scripting.executeScript({
-            target: { tabId: tabId },
-            function: SetPageStyle,
-            args: [tab.url, tab.id, enableLogs]
+        const url = chrome.runtime.getURL('styles/' + new URL(tab.url).hostname + '.css');
+        if (enableLogs) { console.log('Fetching: ' + url) }
+        fetch(url)
+        .then(() => {
+            SetPageStyle(tab.url, tab.id, enableLogs)
+            chrome.scripting.executeScript({
+                target: { tabId: tabId },
+                function: SetPageStyle,
+                args: [tab.url, tab.id, enableLogs]
+            })
         })
     }
 })
