@@ -1,0 +1,81 @@
+#content {
+    background-color: #202124;
+    color: #dddddd;
+}
+
+.szoveggyujtemeny.callout,
+.szoveggyujtemeny.wide-section {
+    background-color: #8d2715;
+}
+
+.callout {
+    background-color: #006c80;
+    color: #ffffff;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #202124;
+}
+
+.scroll-top {
+    background-color: #202124;
+}
+
+.box.blue {
+    background-color: #33393a;
+}
+
+.iranyaszoveg.wide-section,
+.iranyaszoveg.callout {
+    background-color: #645344;
+    color: #f7dbc3;
+}
+
+.eke-fillgap-drop-p {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.exe-container .exe-engine .exe-description {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.eke-fillgap-drop .eke-fillgap-dropdown {
+    border-color: #50272e;
+    background: #572b33;
+    color: #fff;
+}
+
+.eke-fillgap-drop .eke-fillgap-dropdown.active {
+    border-color: #50272e;
+    box-shadow: 0 0 5px #290f14;
+}
+
+.vitassukmeg.callout {
+    background-color: #4b1615;
+    color: #facdcd;
+}
+
+.wm-dnd-item-to-area .answer-div {
+    background-color: #d48895;
+    color: #000;
+}
+
+.wm-dnd-item-to-area .drop-div-box .box-title {
+    background-color: #d48895;
+    color: #000;
+}
+
+table tbody tr:nth-child(even),
+tbody tr:nth-child(even),
+table tbody tr {
+    background-color: unset;
+}
+
+.forras.callout {
+    background-color: #615d50;
+    color: #fff4e7;
+}
+
+.fejezet_06 table tr {
+    color: #000;
+}
