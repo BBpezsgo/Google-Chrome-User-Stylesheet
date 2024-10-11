@@ -1,2 +1,4 @@
-styles/*
-!styles/www.nkp.hu.css
+styles
+node_modules
+
+package-lock.json

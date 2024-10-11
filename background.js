@@ -1,69 +1,67 @@
 'use strict'
 
-const enableLogs = false
-
-chrome.action.onClicked.addListener(async (tab) => {
-    if (!tab.url.startsWith("chrome")) {
-        const url = chrome.runtime.getURL('styles/' + new URL(tab.url).hostname + '.css');
-        if (enableLogs) { console.log('Fetching: ' + url) }
-        fetch(url)
+chrome.action.onClicked.addListener((tab) => {
+    const url = chrome.runtime.getURL('styles/' + new URL(tab.url).hostname + '.css');
+    fetch(url)
         .then(() => {
-            SetPageStyle(tab.url, tab.id, enableLogs)
+            setPageStyle(tab.url, tab.id)
             chrome.scripting.executeScript({
                 target: { tabId: tab.id },
-                function: SetPageStyle,
-                args: [tab.url, tab.id, enableLogs]
+                func: setPageStyle,
+                args: [tab.url, tab.id]
             })
         })
-    }
 })
 
-chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
-    if (!tab.url.startsWith("chrome")) {
-        const url = chrome.runtime.getURL('styles/' + new URL(tab.url).hostname + '.css');
-        if (enableLogs) { console.log('Fetching: ' + url) }
-        fetch(url)
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    const url = chrome.runtime.getURL('styles/' + new URL(tab.url).hostname + '.css');
+    fetch(url)
         .then(() => {
-            SetPageStyle(tab.url, tab.id, enableLogs)
+            setPageStyle(tab.url, tab.id)
             chrome.scripting.executeScript({
                 target: { tabId: tabId },
-                function: SetPageStyle,
-                args: [tab.url, tab.id, enableLogs]
+                func: setPageStyle,
+                args: [tab.url, tab.id]
             })
         })
-    }
 })
 
-/** @param {'NONE' | 'ERROR' | 'NOT_FOUND' | 'LOADING' | 'OK'} state */
-function SetBadge(state, tabID) {
+/**
+ * @param {'NONE' | 'ERROR' | 'NOT_FOUND' | 'LOADING' | 'OK'} state
+ * @param {number} tabId
+ */
+function setBadge(state, tabId) {
     if (state == 'OK') {
-        chrome.action.setBadgeText({ text: '✓', tabId: tabID })
-        chrome.action.setBadgeBackgroundColor({color: '#666666'})
+        chrome.action.setBadgeText({ text: '✓', tabId: tabId })
+        chrome.action.setBadgeBackgroundColor({ color: '#666666' })
     } else if (state == 'LOADING') {
-        chrome.action.setBadgeText({ text: '⭮', tabId: tabID })
-        chrome.action.setBadgeBackgroundColor({color: '#666666'})
+        chrome.action.setBadgeText({ text: '⭮', tabId: tabId })
+        chrome.action.setBadgeBackgroundColor({ color: '#666666' })
     } else if (state == 'NONE') {
-        chrome.action.setBadgeText({ text: '', tabId: tabID })
+        chrome.action.setBadgeText({ text: '', tabId: tabId })
     } else if (state == 'ERROR') {
-        chrome.action.setBadgeText({ text: '!', tabId: tabID })
-        chrome.action.setBadgeBackgroundColor({color: '#DB4437'})
+        chrome.action.setBadgeText({ text: '!', tabId: tabId })
+        chrome.action.setBadgeBackgroundColor({ color: '#DB4437' })
     } else if (state == 'NOT_FOUND') {
-        chrome.action.setBadgeText({ text: 'x', tabId: tabID })
-        chrome.action.setBadgeBackgroundColor({color: '#DB4437'})
+        chrome.action.setBadgeText({ text: 'x', tabId: tabId })
+        chrome.action.setBadgeBackgroundColor({ color: '#DB4437' })
     } else {
-        chrome.action.setBadgeText({ text: '', tabId: tabID })
+        chrome.action.setBadgeText({ text: '', tabId: tabId })
     }
 }
 
-/** @param {'ACTIVE' | 'INACTIVE'} state */
-function SetIcon(state, tabID) {
+/**
+ * @param {'ACTIVE' | 'INACTIVE'} state
+ * @param {number} tabId
+ */
+function setIcon(state, tabId) {
     if (state == 'ACTIVE') {
         chrome.action.setIcon({
             path: {
                 16: "images/icon16.png",
                 32: "images/icon32.png"
             },
-            tabId: tabID
+            tabId: tabId
         })
     } else {
         chrome.action.setIcon({
@@ -71,127 +69,113 @@ function SetIcon(state, tabID) {
                 16: "images/iconInactive16.png",
                 32: "images/iconInactive32.png"
             },
-            tabId: tabID
+            tabId: tabId
         })
     }
 }
 
-function SetPageColorOverrides(name, tabID) {
-    if (enableLogs) { console.log('SetPageColorOverrides()') }
+/**
+ * @param {string} name
+ * @param {number} tabId
+ */
+function setPageColorOverrides(name, tabId) {
     try {
         const url = chrome.runtime.getURL('styles/' + name + '.ov');
-        if (enableLogs) { console.log('Fetching: ' + url) }
         fetch(url)
             .then((response) => response.text()
-            .then((value) => {
-                /** @type {{key: string;value: string;}[]} */
-                var overrides = []
+                .then((value) => {
+                    /** @type {Array<{ key: string; value: string; }>} */
+                    const overrides = []
 
-                if (enableLogs) { console.log('Process overrides...') }
+                    value.split('\n').forEach(line => {
+                        if (line.includes('>')) {
+                            const left = line.split('>')[0].trim()
+                            const right = line.split('>')[1].trim()
+                            overrides.push({ key: left, value: right })
+                        }
+                    });
 
-                value.split('\n').forEach(line => {
-                    if (line.includes('>')) {
-                        var left = line.split('>')[0].trim()
-                        var right = line.split('>')[1].trim()
-                        overrides.push({key: left, value: right})
-                    }
-                });
-
-                if (enableLogs) { console.log('Apply overrides... (1)') }
-                chrome.scripting.executeScript({
-                    target: { tabId: tabID },
-                    /** @param {{ key: string; value: string; }[]} overrides @param {boolean} enableLogs */
-                    function: (overrides, enableLogs) => {
-                        if (enableLogs) { console.log('Apply overrides... (2)') }
-                        const allInBody = document.querySelectorAll('body *');
-                        for (const element of allInBody) {
-                            if (element == undefined || element == null) { continue }
-                            if (element.hasAttribute('style') == true) {
-                                /** @type {string} */
-                                var style = element.getAttribute('style')
-                                var ovVal = null
-                                for (let i = 0; i < overrides.length; i++) {
-                                    const overrideItem = overrides[i];
-                                    if (style.includes(overrideItem.key)) {
-                                        ovVal = overrideItem
-                                        break
+                    chrome.scripting.executeScript({
+                        target: { tabId: tabId },
+                        func: (overrides) => {
+                            const allInBody = document.querySelectorAll('body *');
+                            for (const element of allInBody) {
+                                if (element == undefined || element == null) { continue }
+                                if (element.hasAttribute('style') == true) {
+                                    /** @type {string} */
+                                    const style = element.getAttribute('style')
+                                    let ovVal = null
+                                    for (let i = 0; i < overrides.length; i++) {
+                                        const overrideItem = overrides[i];
+                                        if (style.includes(overrideItem.key)) {
+                                            ovVal = overrideItem
+                                            break
+                                        }
+                                    }
+                                    if (ovVal != null && ovVal != undefined) {
+                                        element.setAttribute('style', style.replace(ovVal.key, ovVal.value))
                                     }
                                 }
-                                if (ovVal != null && ovVal != undefined) {
-                                    element.setAttribute('style', style.replace(ovVal.key, ovVal.value))
-                                }
                             }
-                        }
-                    },
-                    args: [overrides, enableLogs]
-                })
-                .catch((error) => {
-                    if (enableLogs) { console.error(error) }
-                })
-            }))
-            .catch((error) => {
-                if (enableLogs) { console.error(error) }
-            })
-        .catch((error) => {
-            if (enableLogs) { console.error(error) }
-        })
-    } catch (error) {
-        if (enableLogs) { console.error(error) }
-    }
+                        },
+                        args: [overrides]
+                    })
+                        .catch(() => { })
+                }))
+            .catch(() => { })
+            .catch(() => { })
+    } catch (error) { }
 }
 
-function SetPageGlobalStyle(tabID) {
+/**
+ * @param {number} tabId
+ */
+function setPageGlobalStyle(tabId) {
     try {
         const urlGlobal = chrome.runtime.getURL('styles/global.css');
-        if (enableLogs) { console.log('Fetching: ' + urlGlobal) }
         fetch(urlGlobal)
             .then((response) => response.text()
-            .then((value) => {
-                chrome.scripting.executeScript({
-                    target: { tabId: tabID },
-                    function: (styleContent) => {
-                        var domStyle = document.getElementById('user-global-stylesheet');
-                        if (domStyle == null) {
-                            domStyle = document.createElement('style')
-                            domStyle.id = "user-global-stylesheet";
-                        }
-                        domStyle.innerHTML = styleContent;
-                        document.head.appendChild(domStyle);
-                    },
-                    args: [value]
-                })
-                .catch((error) => {
-                    if (enableLogs) { console.error(error) }
-                })
-            }))
-            .catch((error) => {
-                if (enableLogs) { console.error(error) }
-            })
-        .catch((error) => {
-            if (enableLogs) { console.error(error) }
-        })
-    } catch (error) {
-        if (enableLogs) { console.error(error) }
-    }
+                .then((value) => {
+                    chrome.scripting.executeScript({
+                        target: { tabId: tabId },
+                        func: (styleContent) => {
+                            let domStyle = document.getElementById('user-global-stylesheet');
+                            if (domStyle == null) {
+                                domStyle = document.createElement('style')
+                                domStyle.id = "user-global-stylesheet";
+                            }
+                            domStyle.innerHTML = styleContent;
+                            document.head.appendChild(domStyle);
+                        },
+                        args: [value]
+                    })
+                        .catch(() => { })
+                }))
+            .catch(() => { })
+            .catch(() => { })
+    } catch (error) { }
 }
 
-function SetPageStyle(uri, tabID, enableLogs) {
-    if (typeof SetBadge !== 'undefined') {
-        SetBadge('LOADING', tabID)
+/**
+ * @param {string | URL} uri
+ * @param {number} tabId
+ */
+function setPageStyle(uri, tabId) {
+    if (typeof setBadge !== 'undefined') {
+        setBadge('LOADING', tabId)
     }
 
     try {
-        var domain = new URL(uri).hostname
+        const domain = new URL(uri).hostname
         const url = chrome.runtime.getURL('styles/' + domain + '.css');
-        if (enableLogs) { console.log('Fetching: ' + url) }
         fetch(url)
             .then((response) => response.text().then((value) => {
-                SetPageGlobalStyle(tabID)
-                SetPageColorOverrides(domain, tabID)
+                setPageGlobalStyle(tabId)
+                setPageColorOverrides(domain, tabId)
                 chrome.scripting.executeScript({
-                    target: { tabId: tabID },
-                    function: (styleContent) => {
-                        var domStyle = document.getElementById('user-stylesheet');
+                    target: { tabId: tabId },
+                    func: (styleContent) => {
+                        let domStyle = document.getElementById('user-stylesheet');
                         if (domStyle == null) {
                             domStyle = document.createElement('style')
                             domStyle.id = "user-stylesheet";
@@ -201,28 +185,25 @@ function SetPageStyle(uri, tabID, enableLogs) {
                     },
                     args: [value]
                 })
-                .then((results) => {
-                    SetBadge('NONE', tabID)
-                    SetIcon('ACTIVE', tabID)
-                })
-                .catch((error) => {
-                    if (enableLogs) { console.error(error) }
-                    SetBadge('ERROR', tabID)
-                    SetIcon('INACTIVE', tabID)
-                })
+                    .then(() => {
+                        setBadge('NONE', tabId)
+                        setIcon('ACTIVE', tabId)
+                    })
+                    .catch(() => {
+                        setBadge('ERROR', tabId)
+                        setIcon('INACTIVE', tabId)
+                    })
             }))
-            .catch((error) => {
-                if (enableLogs) { console.error(error) }
-                if (typeof SetBadge !== 'undefined') {
-                    SetBadge('NONE', tabID)
+            .catch(() => {
+                if (typeof setBadge !== 'undefined') {
+                    setBadge('NONE', tabId)
                 }
-                if (typeof SetIcon !== 'undefined') {
-                    SetIcon('INACTIVE', tabID)
+                if (typeof setIcon !== 'undefined') {
+                    setIcon('INACTIVE', tabId)
                 }
             })
     } catch (error) {
-        if (enableLogs) { console.error(error) }
-        SetBadge('ERROR', tabID)
-        SetIcon('INACTIVE', tabID)
+        setBadge('ERROR', tabId)
+        setIcon('INACTIVE', tabId)
     }
 }
