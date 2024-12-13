@@ -5,11 +5,11 @@ chrome.action.onClicked.addListener((tab) => {
     fetch(url)
         .then(() => {
             setPageStyle(tab.url, tab.id)
-            chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                func: setPageStyle,
-                args: [tab.url, tab.id]
-            })
+            // chrome.scripting.executeScript({
+            //     target: { tabId: tab.id },
+            //     func: setPageStyle,
+            //     args: [tab.url, tab.id]
+            // })
         })
 })
 
@@ -18,11 +18,11 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     fetch(url)
         .then(() => {
             setPageStyle(tab.url, tab.id)
-            chrome.scripting.executeScript({
-                target: { tabId: tabId },
-                func: setPageStyle,
-                args: [tab.url, tab.id]
-            })
+            // chrome.scripting.executeScript({
+            //     target: { tabId: tabId },
+            //     func: setPageStyle,
+            //     args: [tab.url, tab.id]
+            // })
         })
 })
 
@@ -80,7 +80,7 @@ function setIcon(state, tabId) {
  */
 function setPageColorOverrides(name, tabId) {
     try {
-        const url = chrome.runtime.getURL('styles/' + name + '.ov');
+        const url = chrome.runtime.getURL('styles/' + name + '.ov')
         fetch(url)
             .then((response) => response.text()
                 .then((value) => {
@@ -122,9 +122,9 @@ function setPageColorOverrides(name, tabId) {
                     })
                         .catch(() => { })
                 }))
-            .catch(() => { })
-            .catch(() => { })
-    } catch (error) { }
+            .catch(console.error)
+            .catch(console.error)
+    } catch (error) { console.error(error) }
 }
 
 /**
@@ -149,11 +149,11 @@ function setPageGlobalStyle(tabId) {
                         },
                         args: [value]
                     })
-                        .catch(() => { })
+                        .catch(console.error)
                 }))
-            .catch(() => { })
-            .catch(() => { })
-    } catch (error) { }
+            .catch(console.error)
+            .catch(console.error)
+    } catch (error) { console.error(error) }
 }
 
 /**
@@ -189,12 +189,14 @@ function setPageStyle(uri, tabId) {
                         setBadge('NONE', tabId)
                         setIcon('ACTIVE', tabId)
                     })
-                    .catch(() => {
+                    .catch(reason => {
+                        console.error(reason)
                         setBadge('ERROR', tabId)
                         setIcon('INACTIVE', tabId)
                     })
             }))
-            .catch(() => {
+            .catch(reason => {
+                console.error(reason)
                 if (typeof setBadge !== 'undefined') {
                     setBadge('NONE', tabId)
                 }
@@ -203,6 +205,7 @@ function setPageStyle(uri, tabId) {
                 }
             })
     } catch (error) {
+        console.error(error)
         setBadge('ERROR', tabId)
         setIcon('INACTIVE', tabId)
     }
